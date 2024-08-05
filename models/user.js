@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 'use strict';
 const {
   Model
@@ -12,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
     }
+
+    async validatePassword(password) {
+      return await bcrypt.compare(password, this.password);
+    }
   }
   User.init({
     phone: DataTypes.STRING,
@@ -20,6 +26,19 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
+    hooks: {
+      beforeCreate: async (user, options) => {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      },
+      
+      beforeUpdate: async (user, options) => {
+        if (user.changed('password')) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
+        }
+      }
+    }
   });
   return User;
 };
