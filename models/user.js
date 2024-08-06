@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 
 'use strict';
 const {
@@ -13,6 +14,21 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+    }
+
+    static findById(id) {
+      return User.findOne({
+        where: {
+          [Op.or]: [
+            {
+              email: id
+            },
+            {
+              phone: id
+            }
+          ]
+        }
+      })
     }
 
     async validatePassword(password) {
@@ -31,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       },
-      
+
       beforeUpdate: async (user, options) => {
         if (user.changed('password')) {
           const salt = await bcrypt.genSalt(10);
