@@ -13,9 +13,8 @@ const MYSQL_CONFIG = {
 
 const url = `redis://${process.env.REDIS_HOST}:6379`
 
-
-const MAX_RETRIES = 10
-const RETRY_DELAY_MS = 1000
+const MAX_RETRIES = 25
+const RETRY_DELAY_MS = 1500
 
 async function checkMySQL() {
   try {
