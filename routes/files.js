@@ -59,13 +59,12 @@ router.put('/update/:id', upload.single('file'), async (req, res) => {
 
   try {
     const files = await req.user.getFiles({ where: { id: fileId }, transaction })
-
-    if (!files.length) {
-      return res.status(404).json({ ok: false, error: 'File not exists' })
-    }
-
     const fileObject = files[0]
 
+    if (!fileObject) {
+      await transaction.commit()
+      return res.status(404).json({ ok: false, error: 'File not exists' })
+    }
 
     const originalFile = { ...fileObject.dataValues }
 
@@ -150,6 +149,7 @@ router.delete('/delete/:id', async (req, res) => {
     const file = files[0]
 
     if (!file) {
+      await transaction.commit()
       return res.status(404).json({ ok: false, error: 'File not exists' })
     }
 
