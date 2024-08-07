@@ -11,20 +11,16 @@ module.exports = {
       },
 
       accessPart: {
-        allowNull: false,
         type: Sequelize.STRING
       },
       accessHash: {
-        allowNull: false,
         type: Sequelize.STRING
       },
 
       refreshPart: {
-        allowNull: false,
         type: Sequelize.STRING
       },
       refreshHash: {
-        allowNull: false,
         type: Sequelize.STRING
       },
 
