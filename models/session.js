@@ -20,10 +20,12 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     async blacklistAccessToken() {
+      console.log('* Blacklisting access token')
       await redisClient.set('blacklist:' + this.accessPart, this.accessHash, { EX: config.expireBlacklistRedis })
     }
 
     async blacklistRefreshToken() {
+      console.log('* Blacklisting refresh token')
       await redisClient.set('blacklist:' + this.refreshPart, this.refreshHash, { EX: config.expireBlacklistRedis })
     }
 
