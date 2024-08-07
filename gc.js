@@ -1,10 +1,13 @@
 const { Op } = require('sequelize');
-const { Session, sequelize } = require('./models');
+const { Session } = require('./models');
 const moment = require('moment')
 const { config } = require('./config');
-const { redisClient } = require('./lib/redis');
 
+const cron = require('node-cron');
 
+cron.schedule('0 * * * *', async () => {
+  await destroyOldSessions()
+})
 
 async function destroyOldSessions() {
   console.log('* Destroying old sessions')
@@ -28,13 +31,4 @@ async function destroyOldSessions() {
     page++
   } while (sessions.length)
   console.log('* Done destroying old sessions')
-
-
-};
-
-(async () => {
-  await destroyOldSessions()
-
-  await redisClient.disconnect()
-  await sequelize.close()
-})()
+}

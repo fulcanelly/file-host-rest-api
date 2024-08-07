@@ -9,7 +9,6 @@ services:
     tty: true
 
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
       MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
       MYSQL_DATABASE: $MYSQL_DATABASE
 
@@ -45,6 +44,33 @@ services:
     networks:
       - shared_network
     restart: always
+    command: 'sh bin/start-app.sh'
+
+  gc:
+    stdin_open: true
+    tty: true
+
+    volumes:
+      - ./:/app/
+
+    environment:
+        - MYSQL_ROOT_PASSWORD
+        - MYSQL_DATABASE
+        - MYSQL_HOST
+        - MYSQL_USER
+
+        - REDIS_HOST
+
+    build:
+      context: ./
+      dockerfile: Dockerfile.txt
+
+    networks:
+      - shared_network
+    restart: always
+
+    command: 'sh bin/start-gc.sh'
+
 
   redis:
     stdin_open: true
