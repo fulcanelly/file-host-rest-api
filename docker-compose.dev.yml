@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+
+    stdin_open: true
+    tty: true
+
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DATABASE
+
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+
+    networks:
+      - shared_network
+
+  app:
+    stdin_open: true
+    tty: true
+
+    volumes:
+      - ./:/app
+      - ./uploads:/app/uploads
+
+    ports:
+      - $PORT:$PORT
+
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_HOST
+      - MYSQL_USER
+
+      - REDIS_HOST
+
+    build:
+      context: ./
+      dockerfile: Dockerfile.txt
+
+    networks:
+      - shared_network
+    restart: always
+
+  redis:
+    stdin_open: true
+    tty: true
+
+    image: redis
+    restart: always
+    networks:
+      - shared_network
+
+networks:
+  shared_network: {}
