@@ -11,6 +11,29 @@ const userify = require('../middlewares/userify')
 const router = express.Router()
 
 
+/**
+ * @typedef {{
+*  id: string,
+*  password: string
+* }} SigninRequest
+*/
+
+/**
+* @typedef {{
+*  ok: boolean,
+*  accessToken: string,
+*  refreshToken: string
+* }} SigninResponse
+*/
+
+/**
+* @route POST /signin
+* @desc Signs in a user and returns access and refresh tokens.
+* @access Public
+* @param {SigninRequest} req.body - User credentials.
+* @returns {SigninResponse} The access and refresh tokens.
+* @throws {400} No such user or wrong password.
+*/
 router.post('/signin', async (req, res) => {
   const { id, password } = req.body;
   const user = await User.findByPublicId(id)
@@ -20,7 +43,7 @@ router.post('/signin', async (req, res) => {
   }
 
   if (!await user.validatePassword(password)) {
-    return res.json({ error: 'Wrong password' });
+    return res.status(400).json({ ok: false, error: 'Wrong password' });
   }
 
   const session = await Session.create({
@@ -39,15 +62,45 @@ router.post('/signin', async (req, res) => {
   await session.save()
 
   return res.json({
+    ok: true,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
   })
 })
 
+/**
+* @typedef {{
+*  ok: boolean,
+*  user: string
+* }} InfoResponse
+*/
+
+/**
+* @route GET /info
+* @desc Retrieves information about the currently authenticated user.
+* @access Private
+* @returns {InfoResponse} The user information.
+*/
 router.get('/info', authenticateAccessToken, userify, (req, res) => {
-  res.json({ user: req.user.getPublicId() })
+  res.json({ ok: true, user: req.user.getPublicId() })
 })
 
+
+/**
+* @typedef {{
+*  ok: boolean,
+*  accessToken: string,
+*  user: string
+* }} NewTokenResponse
+*/
+
+/**
+* @route POST /signin/new_token
+* @desc Issues a new access token for the user.
+* @access Private
+* @returns {NewTokenResponse} The new access token.
+* @throws {500} Failed to create new token.
+*/
 router.post('/signin/new_token', authenticateRefreshToken, userify, async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -75,6 +128,20 @@ router.post('/signin/new_token', authenticateRefreshToken, userify, async (req, 
   }
 })
 
+/**
+* @typedef {{
+*  ok: boolean,
+*  logout: boolean
+* }} LogoutResponse
+*/
+
+/**
+* @route GET /logout
+* @desc Logs out the user and invalidates the current session.
+* @access Private
+* @returns {LogoutResponse} Confirmation of logout.
+* @throws {500} Failed to logout.
+*/
 router.get('/logout', authenticateAccessToken, userify, async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -96,12 +163,29 @@ router.get('/logout', authenticateAccessToken, userify, async (req, res) => {
 })
 
 
-// args 
-//  id: email | phone
-//  password: string 
+/**
+* @typedef {{
+*  id: string,
+*  password: string
+* }} SignupRequest
+*/
 
-// ok: bool
-// error: string | undefined
+/**
+* @typedef {{
+*  ok: boolean,
+*  error?: string
+* }} SignupResponse
+*/
+
+/**
+* @route POST /signup
+* @desc Signs up a new user.
+* @access Public
+* @param {SignupRequest} req.body - User details.
+* @returns {SignupResponse} Result of the signup attempt.
+* @throws {400} Wrong email or phone.
+* @throws {500} Failed to create user.
+*/
 router.post('/signup', async (req, res) => {
   const { id, password } = req.body;
 
