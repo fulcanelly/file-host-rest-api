@@ -1,7 +1,6 @@
 {
-  "name": "test-project",
+  "name": "file-host-rest-api",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.1.1",
