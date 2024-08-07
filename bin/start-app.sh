@@ -1,2 +1,2 @@
-sh setup.sh
+sh bin/setup.sh
 yarn start
