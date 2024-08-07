@@ -216,6 +216,7 @@ async function signup(signupData, password) {
     let user = await User.findOne({ where: signupData, transaction })
 
     if (user) {
+      await transaction.commit()
       return {
         status: 400,
         payload: {
