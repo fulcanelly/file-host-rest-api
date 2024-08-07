@@ -41,8 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     accessHash: DataTypes.STRING,
     refreshPart: DataTypes.STRING,
     refreshHash: DataTypes.STRING,
-    userId: DataTypes.INTEGER,
-    expireAt: DataTypes.DATE
+    userId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Session',

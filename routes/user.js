@@ -3,8 +3,6 @@ const { sequelize, User, Session } = require('../models')
 var email = require("email-validator")
 const { phone } = require('phone')
 const { generateTokenData, authenticateRefreshToken, authenticateAccessToken, generateAccessToken, obfuscateToken } = require('../lib/tokens')
-const moment = require('moment')
-const { config } = require('../config')
 const userify = require('../middlewares/userify')
 
 
@@ -46,10 +44,7 @@ router.post('/signin', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Wrong password' });
   }
 
-  const session = await Session.create({
-    expireAt: moment().add(config.sessionExpireAfter).toDate(),
-    userId: user.id,
-  })
+  const session = await Session.create({ userId: user.id })
 
   const tokens = await generateTokenData(user.id, session.id)
 
