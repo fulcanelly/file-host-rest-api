@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
 
-    static findById(id) {
+    static findByPublicId(id) {
       return User.findOne({
         where: {
           [Op.or]: [
@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
           ]
         }
       })
+    }
+
+    getPublicId() {
+      return this.phone || this.email
     }
 
     async validatePassword(password) {

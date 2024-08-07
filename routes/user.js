@@ -13,7 +13,7 @@ const router = express.Router()
 
 router.post('/signin', async (req, res) => {
   const { id, password } = req.body;
-  const user = await User.findById(id)
+  const user = await User.findByPublicId(id)
 
   if (!user) {
     return res.status(400).json({ ok: false, error: 'There are no such user' })
@@ -28,7 +28,7 @@ router.post('/signin', async (req, res) => {
     userId: user.id,
   })
 
-  const tokens = await generateTokenData(id, session.id)
+  const tokens = await generateTokenData(user.id, session.id)
 
   session.accessPart = tokens.accessPart
   session.accessHash = tokens.accessHash
@@ -44,8 +44,8 @@ router.post('/signin', async (req, res) => {
   })
 })
 
-router.get('/info', authenticateAccessToken, (req, res) => {
-  res.json({ user: req.user.id })
+router.get('/info', authenticateAccessToken, userify, (req, res) => {
+  res.json({ user: req.user.getPublicId() })
 })
 
 router.post('/signin/new_token', authenticateRefreshToken, userify, async (req, res) => {
@@ -58,8 +58,7 @@ router.post('/signin/new_token', authenticateRefreshToken, userify, async (req, 
 
     await session.blacklistAccessToken()
 
-
-    const accessToken = await generateAccessToken(req.user.email ?? req.user.phone, req.sessionId)
+    const accessToken = await generateAccessToken(req.userId, req.sessionId)
 
     session.accessPart = accessToken.accessPart
     session.accessHash = accessToken.accessHash
@@ -154,7 +153,7 @@ async function signup(signupData, password) {
       }
     }
   } catch (e) {
-    console.error(e, 'Failed to create user')
+    console.error('Failed to create user', e)
     await transaction.rollback()
 
     return {
