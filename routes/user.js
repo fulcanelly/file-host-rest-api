@@ -44,23 +44,22 @@ router.post('/signin', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Wrong password' });
   }
 
-  const session = await Session.create({ userId: user.id })
+  const transaction = await sequelize.transaction();
 
-  const tokens = await generateTokenData(user.id, session.id)
+  try {
+    const tokens = await createSession(user.id, transaction)
+    await transaction.commit()
+    return res.json({
+      ok: true,
+      ...tokens,
+    })
+  } catch (error) {
+    console.error('Transaction error', error)
+    await transaction.rollback()
 
-  session.accessPart = tokens.accessPart
-  session.accessHash = tokens.accessHash
+    res.status(500).json({ ok: false, error: 'Failed to sign in' })
 
-  session.refreshPart = tokens.refreshPart
-  session.refreshHash = tokens.refreshHash
-
-  await session.save()
-
-  return res.json({
-    ok: true,
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-  })
+  }
 })
 
 /**
@@ -123,6 +122,8 @@ router.post('/signin/new_token', authenticateRefreshToken, userify, async (req, 
   }
 })
 
+
+
 /**
 * @typedef {{
 *  ok: boolean,
@@ -168,6 +169,10 @@ router.get('/logout', authenticateAccessToken, userify, async (req, res) => {
 /**
 * @typedef {{
 *  ok: boolean,
+*  tokens: {
+*    accessToken: string,
+*    refreshToken: string
+*  },
 *  error?: string
 * }} SignupResponse
 */
@@ -223,12 +228,15 @@ async function signup(signupData, password) {
     user = User.build({ ...signupData, password })
 
     await user.save({ transaction })
+    const tokens = await createSession(user.id, transaction)
+
     await transaction.commit()
 
     return {
       status: 200,
       payload: {
-        ok: true
+        ok: true,
+        tokens
       }
     }
   } catch (e) {
@@ -242,6 +250,25 @@ async function signup(signupData, password) {
         error: 'Failed to create user'
       }
     }
+  }
+}
+
+async function createSession(userId, transaction) {
+  const session = await Session.create({ userId }, { transaction })
+
+  const tokens = await generateTokenData(userId, session.id)
+
+  session.accessPart = tokens.accessPart
+  session.accessHash = tokens.accessHash
+
+  session.refreshPart = tokens.refreshPart
+  session.refreshHash = tokens.refreshHash
+
+  await session.save({ transaction })
+
+  return {
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken
   }
 }
 
