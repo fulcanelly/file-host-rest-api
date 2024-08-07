@@ -29,3 +29,18 @@ openssl rand -base64 32 > secret/refresh_token.key
 ```
 docker-compose -f docker-compose.dev.yml up
 ```
+
+
+### Example use
+
+#### Upload file
+```bash
+curl -F "file=@test.png" http://localhost:3000/file/upload \
+     -H "Authorization: Bearer $TOKEN" | jq
+```
+#### Sign up 
+```bash
+curl -X POST http://localhost:3000/signup \
+  -H "Content-Type: application/json" \
+  -d '{"id": "+380939748644", "password": "sensitivepassword"}'
+```
