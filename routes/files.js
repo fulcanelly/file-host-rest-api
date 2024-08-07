@@ -153,7 +153,7 @@ router.delete('/delete/:id', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'File not exists' })
     }
 
-    await file.destroy()
+    await file.destroy({ transaction })
     await file.deleteFile()
 
     await transaction.commit()
